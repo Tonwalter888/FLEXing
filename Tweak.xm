@@ -10,6 +10,11 @@
 #import "Interfaces.h"
 #import <rootless.h>
 
+#if TARGET_OS_SIMULATOR
+#import <UIKit/UIFunctions.h>
+#define realPath(path) [UISystemRootDirectory() stringByAppendingPathComponent:path]
+#endif
+
 BOOL initialized = NO;
 id manager = nil;
 SEL show = nil;
@@ -37,11 +42,16 @@ inline bool isSnapchatApp() {
 
 inline BOOL flexAlreadyLoaded() {
     return NSClassFromString(@"FLEXExplorerToolbar") != nil;
-} 
+}
 
 %ctor {
+#if TARGET_OS_SIMULATOR
+    NSString *standardPath = realPath(@"/Library/MobileSubstrate/DynamicLibraries/libFLEX.dylib");
+    NSString *reflexPath =   realPath(@"/Library/MobileSubstrate/DynamicLibraries/libreflex.dylib");
+#else
     NSString *standardPath = ROOT_PATH_NS(@"/Library/MobileSubstrate/DynamicLibraries/libFLEX.dylib");
     NSString *reflexPath =   ROOT_PATH_NS(@"/Library/MobileSubstrate/DynamicLibraries/libreflex.dylib");
+#endif
     NSFileManager *disk = NSFileManager.defaultManager;
     NSString *libflex = nil;
     NSString *libreflex = nil;
@@ -123,6 +133,9 @@ inline BOOL flexAlreadyLoaded() {
         tap.numberOfTouchesRequired = 3;
 
         [self addGestureRecognizer:tap];
+#if TARGET_OS_SIMULATOR
+        [manager performSelector:show];
+#endif
     }
 }
 %end
@@ -169,7 +182,7 @@ inline BOOL flexAlreadyLoaded() {
 %end
 
 %hook FLEXManager
-%new
+%new(@@:@)
 + (NSString *)dlopen:(NSString *)path {
     if (!dlopen(path.UTF8String, RTLD_NOW)) {
         return @(dlerror());
