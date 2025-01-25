@@ -25,7 +25,7 @@
     ]];
 }
 
-%new
+%new(v@:@)
 - (void)flexGestureHandler:(UILongPressGestureRecognizer *)recognizer {
 	if (recognizer.state == UIGestureRecognizerStateBegan) {
 		[self _statusBarTapped:recognizer type:kFLEXLongPressGesture];
